@@ -122,6 +122,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
         commit = latest_commit_for_path(repo_root, code)
         commit_date = commit_date_for_hash(repo_root, commit)
         commit_url = f"https://github.com/{owner_repo}/commit/{commit}"
+        history_url = f"https://github.com/{owner_repo}/commits/main/{code}"
 
         images_html: list[str] = []
         for png in iter_png_files(loc_dir):
@@ -144,6 +145,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
             locale_code=html.escape(code),
             commit_date=commit_date,
             commit_url=commit_url,
+            history_url=history_url,
             images="\n".join(images_html) or '<p class="muted">No images.</p>',
             base_path="..",
         )
