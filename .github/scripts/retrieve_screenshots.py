@@ -30,7 +30,6 @@ locale_mapping: dict[str, str] = {
     "nn-NO": "nn",
     "sat": "sat-Olck",
     "sv-SE": "sv",
-    "templates": "en",
     "tl": "fil",
     "zgh": "tzm",
 }
