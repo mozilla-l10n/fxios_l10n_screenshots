@@ -72,6 +72,16 @@ def iter_png_files(locale_dir: Path) -> list[Path]:
     )
 
 
+def commit_date_for_hash(repo_root: Path, commit: str) -> str:
+    """
+    Return commit date (ISO yyyy-mm-dd) for a given commit hash.
+    """
+    return check_output(
+        ["git", "-C", str(repo_root), "show", "-s", "--format=%cs", commit],
+        text=True,
+    ).strip()
+
+
 def latest_commit_for_path(repo_root: Path, rel_path: str) -> str:
     """
     Return latest commit hash that touched rel_path.
@@ -110,6 +120,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
         name = locale_names.get(code, code)
 
         commit = latest_commit_for_path(repo_root, code)
+        commit_date = commit_date_for_hash(repo_root, commit)
         commit_url = f"https://github.com/{owner_repo}/commit/{commit}"
 
         images_html: list[str] = []
@@ -130,7 +141,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
         locale_body = locale_tpl.substitute(
             locale_name=html.escape(name),
             locale_code=html.escape(code),
-            commit=commit,
+            commit_date=commit_date,
             commit_url=commit_url,
             images="\n".join(images_html) or '<p class="muted">No images.</p>',
             base_path="..",
