@@ -53,30 +53,31 @@ def iter_png_files(folder: Path) -> list[Path]:
 
 def same_except_time(old_png: Path, new_png: Path) -> bool:
     """
-    Pixel-exact comparison outside an ignored top-left region defined as percentages.
+    Perceptual-hash comparison outside an ignored top-left region defined as percentages.
 
-    Returns True if identical outside the ignored region, else False.
+    Returns True if the images are perceptually identical (hash distance == 0)
+    after masking the top-left region; else False.
     """
-    # Import here so the script still provides helpful errors if deps missing.
     from PIL import Image  # type: ignore[import-not-found]
-    import numpy as np  # type: ignore[import-not-found]
+    import imagehash  # type: ignore[import-not-found]
 
-    a = np.asarray(Image.open(old_png).convert("RGBA"))
-    b = np.asarray(Image.open(new_png).convert("RGBA"))
+    def masked_phash(p: Path) -> imagehash.ImageHash:
+        im = Image.open(p).convert("RGB")
+        w, h = im.size
 
-    if a.shape != b.shape:
-        return False
+        top = int(h * TOP_IGNORE_PCT)
+        left = int(w * LEFT_IGNORE_PCT)
 
-    h, w = a.shape[:2]
-    top = int(h * TOP_IGNORE_PCT)
-    left = int(w * LEFT_IGNORE_PCT)
+        masked = im.copy()
+        masked.paste((0, 0, 0), (0, 0, left, top))  # mask ignored region
+        return imagehash.phash(masked)
 
-    mask = np.ones((h, w), dtype=bool)
-    mask[0:top, 0:left] = False  # ignored region
+    # If dimensions differ, treat as different
+    with Image.open(old_png) as a_im, Image.open(new_png) as b_im:
+        if a_im.size != b_im.size:
+            return False
 
-    diff = (a != b).any(axis=2)
-    meaningful_diff = diff & mask
-    return not bool(meaningful_diff.any())
+    return (masked_phash(old_png) - masked_phash(new_png)) == 0
 
 
 @dataclass
