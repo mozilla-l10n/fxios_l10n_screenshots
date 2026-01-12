@@ -68,3 +68,55 @@ img {
         columns: 1;
     }
 }
+
+.modal {
+    display: none;
+}
+
+.modal.open {
+    display: block;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.modal-content {
+    position: fixed;
+    inset: 5vh 5vw;
+    background: #f6f8fa;
+    border-radius: 12px;
+    padding: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+#modal-img {
+    display: block;
+    max-width: 100%;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin: 12px auto 0 auto;
+}
+
+.modal-caption {
+    font-size: 14px;
+    color: #24292f;
+    word-break: break-word;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: 0;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #24292f;
+}

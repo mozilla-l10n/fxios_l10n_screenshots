@@ -8,5 +8,56 @@
 </head>
 <body>
 $body
+
+<div id="img-modal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal-content" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+    <button class="modal-close" type="button" data-close="1" aria-label="Close">×</button>
+    <div class="modal-caption" id="modal-caption"></div>
+    <img id="modal-img" alt="">
+  </div>
+</div>
+
+<script>
+  (function () {
+    const modal = document.getElementById("img-modal");
+    const modalImg = document.getElementById("modal-img");
+    const modalCaption = document.getElementById("modal-caption");
+
+    function openModal(src, caption) {
+      modalImg.src = src;
+      modalImg.alt = caption || "";
+      modalCaption.textContent = caption || "";
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      modalImg.src = "";
+      modalCaption.textContent = "";
+      document.body.style.overflow = "";
+    }
+
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a[data-modal='image']");
+      if (a) {
+        e.preventDefault();
+        openModal(a.getAttribute("href"), a.getAttribute("data-caption") || "");
+        return;
+      }
+      if (e.target && e.target.closest && e.target.closest("[data-close='1']")) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+    });
+  })();
+</script>
+
 </body>
 </html>

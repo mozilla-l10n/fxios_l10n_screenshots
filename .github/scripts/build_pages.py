@@ -129,13 +129,14 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
                 f"https://raw.githubusercontent.com/"
                 f"{owner_repo}/{commit}/{code}/{png.name}"
             )
+            caption = html.escape(png.name)
             images_html.append(
                 f"""<figure>
-  <figcaption>{html.escape(png.name)}</figcaption>
-  <a href="{raw_url}">
-    <img src="{raw_url}" alt="{html.escape(png.name)}"/>
-  </a>
-</figure>"""
+            <figcaption>{caption}</figcaption>
+            <a href="{raw_url}" data-modal="image" data-caption="{caption}">
+                <img src="{raw_url}" alt="{caption}"/>
+            </a>
+            </figure>"""
             )
 
         locale_body = locale_tpl.substitute(
