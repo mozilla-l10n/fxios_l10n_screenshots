@@ -1,0 +1,86 @@
+name: Update screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          path: repo
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+      - name: Install Python requirements
+        run: |
+          uv --version
+          uv pip install --system -r repo/.github/scripts/requirements.txt
+      - name: Retrieve screenshots into ./temp
+        run: |
+          mkdir -p temp
+          python repo/.github/scripts/retrieve_screenshots.py temp
+      - name: Sync screenshots from temp -> repo
+        run: |
+          python .github/scripts/sync_screenshots.py repo temp
+
+      - name: Commit per locale folder
+        working-directory: repo
+        run: |
+          git status --porcelain
+
+          # Configure author for commits
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Collect changed top-level directories (locale folders).
+          # We:
+          # - consider all changed paths from git status
+          # - take the first path component
+          # - ignore hidden folders (starting with ".")
+          # - sort unique
+          mapfile -t LOCALES < <(
+            git status --porcelain |
+              awk '{print $2}' |
+              sed 's#^"##; s#"$##' |
+              awk -F/ 'NF>1 {print $1}' |
+              grep -v '^\.' |
+              sort -u
+          )
+
+          if [ "${#LOCALES[@]}" -eq 0 ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          echo "Will commit changes for folders:"
+          printf ' - %s\n' "${LOCALES[@]}"
+
+          for locale in "${LOCALES[@]}"; do
+            # Stage only that locale folder (includes deletions)
+            git add -A "$locale"
+
+            # If nothing staged for this folder, skip
+            if git diff --cached --quiet; then
+              echo "No staged changes for $locale, skipping."
+              continue
+            fi
+
+            git commit -m "Update screenshots for ${locale}"
+          done
+
+      - name: Push commits
+        working-directory: repo
+        run: |
+          # Push back to the same branch
+          git push
