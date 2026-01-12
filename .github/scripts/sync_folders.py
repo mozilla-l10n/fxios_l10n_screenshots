@@ -24,8 +24,8 @@ from pathlib import Path
 from collections.abc import Iterable
 
 
-TOP_IGNORE_PCT: float = 0.10
-LEFT_IGNORE_PCT: float = 0.30
+TOP_IGNORE_PCT: float = 0.06
+LEFT_IGNORE_PCT: float = 0.26
 
 
 def is_hidden_path(p: Path) -> bool:
@@ -69,7 +69,8 @@ def same_except_time(old_png: Path, new_png: Path) -> bool:
         left = int(w * LEFT_IGNORE_PCT)
 
         masked = im.copy()
-        masked.paste((0, 0, 0), (0, 0, left, top))  # mask ignored region
+        # Mask out top-left region (time)
+        masked.paste((0, 0, 0), (int(w * 0.1), int(h * 0.02), left, top))
         return imagehash.phash(masked)
 
     # If dimensions differ, treat as different
