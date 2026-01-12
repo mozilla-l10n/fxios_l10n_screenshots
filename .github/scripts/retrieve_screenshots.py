@@ -11,7 +11,9 @@ from typing import Any
 
 import requests
 
-PONTOON_PROJECT_URL: str = "https://pontoon.mozilla.org/api/v2/projects/firefox-for-ios/"
+PONTOON_PROJECT_URL: str = (
+    "https://pontoon.mozilla.org/api/v2/projects/firefox-for-ios/"
+)
 ARTIFACT_BASE_URL: str = (
     "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
     "mobile.v2.firefox-ios.l10n-screenshots.latest.{locale}/artifacts/"
@@ -32,6 +34,7 @@ locale_mapping: dict[str, str] = {
     "tl": "fil",
     "zgh": "tzm",
 }
+
 
 @dataclass(slots=True)
 class Summary:

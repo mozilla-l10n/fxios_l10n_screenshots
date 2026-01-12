@@ -21,7 +21,7 @@ import argparse
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
+from collections.abc import Iterable
 
 
 TOP_IGNORE_PCT: float = 0.10
