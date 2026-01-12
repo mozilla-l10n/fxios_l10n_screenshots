@@ -32,7 +32,7 @@ jobs:
           python repo/.github/scripts/retrieve_screenshots.py temp
       - name: Sync screenshots from temp -> repo
         run: |
-          python repo/.github/scripts/sync_screenshots.py repo temp
+          python repo/.github/scripts/sync_screenshots.py . temp
 
       - name: Commit per locale folder
         working-directory: repo
