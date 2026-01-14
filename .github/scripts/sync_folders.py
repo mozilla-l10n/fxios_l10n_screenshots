@@ -87,6 +87,7 @@ class LocaleStats:
     changed: int = 0
     added: int = 0
     removed: int = 0
+    ignored: int = 0
     removed_files: list[str] = field(default_factory=list)
     missing_in_new: bool = False
 
@@ -96,6 +97,7 @@ class Totals:
     changed: int = 0
     added: int = 0
     removed: int = 0
+    ignored: int = 0
 
 
 def copy_file(src: Path, dst: Path) -> None:
@@ -124,7 +126,10 @@ def sync_locale(old_loc: Path, new_loc: Path | None) -> LocaleStats:
     for name in sorted(old_files.keys() & new_files.keys()):
         old_path = old_files[name]
         new_path = new_files[name]
-        if not same_except_time(old_path, new_path):
+
+        if same_except_time(old_path, new_path):
+            stats.ignored += 1
+        else:
             copy_file(new_path, old_path)
             stats.changed += 1
 
@@ -167,6 +172,7 @@ def sync_all(
         totals.changed += st.changed
         totals.added += st.added
         totals.removed += st.removed
+        totals.ignored += st.ignored
 
         if st.missing_in_new:
             warnings.append(f"Locale folder missing in NEW (kept as-is): {locale}")
@@ -203,11 +209,14 @@ def print_report(
     for st in sorted(stats_list, key=lambda s: s.locale):
         extra = " (MISSING in NEW)" if st.missing_in_new else ""
         print(
-            f"- {st.locale}{extra}: changed={st.changed}, added={st.added}, removed={st.removed}"
+            f"- {st.locale}{extra}: "
+            f"changed={st.changed}, added={st.added}, removed={st.removed}, ignored={st.ignored}"
         )
 
     print("\nOverall summary:")
-    print(f"- changed={totals.changed}, added={totals.added}, removed={totals.removed}")
+    print(
+        f"- changed={totals.changed}, added={totals.added}, removed={totals.removed}, ignored={totals.ignored}"
+    )
 
     if removed_list:
         print("\nRemoved files:")
