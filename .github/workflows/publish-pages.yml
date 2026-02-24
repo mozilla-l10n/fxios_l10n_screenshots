@@ -52,3 +52,10 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_L10N_TEST_ENG }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text": ":screenshots: :new: A new set of Firefox iOS l10n screenshots has been made available at ${{ steps.deployment.outputs.page_url }}"}
