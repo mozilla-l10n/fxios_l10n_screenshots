@@ -1,0 +1,63 @@
+name: Check for new screenshots
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Compare Taskcluster task ID
+        id: compare
+        run: |
+          RESPONSE=$(curl -sf \
+            "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.firefox-ios.l10n-screenshots.latest.en-US" \
+            || true)
+
+          if [ -z "$RESPONSE" ]; then
+            echo "Failed to reach Taskcluster, skipping."
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          NEW_TASK_ID=$(echo "$RESPONSE" | jq -r '.taskId')
+          STORED_TASK_ID=$(cat .github/last_taskcluster_id 2>/dev/null || echo "")
+
+          echo "Current task ID : $NEW_TASK_ID"
+          echo "Stored task ID  : $STORED_TASK_ID"
+
+          if [ "$NEW_TASK_ID" != "$STORED_TASK_ID" ]; then
+            echo "New screenshots detected, triggering update."
+            echo "trigger=true" >> "$GITHUB_OUTPUT"
+            echo "task_id=$NEW_TASK_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "No new screenshots."
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger update workflow
+        if: steps.compare.outputs.trigger == 'true'
+        run: gh workflow run update-screenshots.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Store Taskcluster task ID
+        if: steps.compare.outputs.trigger == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "${{ steps.compare.outputs.task_id }}" > .github/last_taskcluster_id
+          git add .github/last_taskcluster_id
+          git commit -m "chore: update last Taskcluster task ID"
+          git push
