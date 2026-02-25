@@ -57,7 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          echo "${{ steps.compare.outputs.task_id }}" > .github/last_taskcluster_id
-          git add .github/last_taskcluster_id
+          echo "${{ steps.compare.outputs.task_id }}" > .github/last_taskcluster_id.txt
+          git add .github/last_taskcluster_id.txt
           git commit -m "chore: update last Taskcluster task ID"
           git push
