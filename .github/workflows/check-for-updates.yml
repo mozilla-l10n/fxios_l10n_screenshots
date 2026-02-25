@@ -32,7 +32,7 @@ jobs:
           fi
 
           NEW_TASK_ID=$(echo "$RESPONSE" | jq -r '.taskId')
-          STORED_TASK_ID=$(cat .github/last_taskcluster_id 2>/dev/null || echo "")
+          STORED_TASK_ID=$(cat .github/last_taskcluster_id.txt 2>/dev/null || echo "")
 
           echo "Current task ID : $NEW_TASK_ID"
           echo "Stored task ID  : $STORED_TASK_ID"
