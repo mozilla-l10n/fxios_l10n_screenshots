@@ -48,7 +48,7 @@ jobs:
 
       - name: Trigger update workflow
         if: steps.compare.outputs.trigger == 'true'
-        run: gh workflow run update-screenshots.yml
+        run: gh workflow run update-screenshots.yml --ref ${{ github.ref_name }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
