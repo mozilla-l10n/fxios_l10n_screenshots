@@ -83,4 +83,5 @@ jobs:
         working-directory: repo
         run: |
           # Push back to the same branch
+          git pull --rebase
           git push

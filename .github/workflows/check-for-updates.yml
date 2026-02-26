@@ -48,7 +48,12 @@ jobs:
 
       - name: Trigger update workflow
         if: steps.compare.outputs.trigger == 'true'
-        run: gh workflow run update-screenshots.yml
+        run: |
+          gh workflow run update-screenshots.yml --ref ${{ github.ref_name }}
+          sleep 5  # Wait for the Github Actions job to start
+          RUN_ID=$(gh run list --workflow=update-screenshots.yml --branch ${{ github.ref_name }} --limit=1 --json databaseId -q '.[0].databaseId')
+          echo "Waiting for run $RUN_ID to complete..."
+          gh run watch "$RUN_ID" --exit-status --interval 30
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,6 +62,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase
           echo "${{ steps.compare.outputs.task_id }}" > .github/last_taskcluster_id.txt
           git add .github/last_taskcluster_id.txt
           git commit -m "chore: update last Taskcluster task ID"
