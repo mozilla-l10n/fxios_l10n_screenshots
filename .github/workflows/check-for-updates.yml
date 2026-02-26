@@ -48,7 +48,12 @@ jobs:
 
       - name: Trigger update workflow
         if: steps.compare.outputs.trigger == 'true'
-        run: gh workflow run update-screenshots.yml --ref ${{ github.ref_name }}
+        run: |
+          gh workflow run update-screenshots.yml --ref ${{ github.ref_name }}
+          sleep 5  # Wait for the Github Actions job to start
+          RUN_ID=$(gh run list --workflow=update-screenshots.yml --branch ${{ github.ref_name }} --limit=1 --json databaseId -q '.[0].databaseId')
+          echo "Waiting for run $RUN_ID to complete..."
+          gh run watch "$RUN_ID" --exit-status
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
