@@ -8,8 +8,15 @@ a {
     text-decoration: none;
 }
 
-a:hover {
+a:hover,
+a:focus-visible {
     text-decoration: underline;
+}
+
+a:focus-visible {
+    outline: 2px solid #0969da;
+    outline-offset: 2px;
+    border-radius: 2px;
 }
 
 .top {
@@ -31,6 +38,7 @@ a:hover {
 }
 
 figure {
+    cursor: pointer;
     margin: 0;
     border: 1px solid #d0d7de;
     border-radius: 10px;
@@ -46,6 +54,7 @@ figcaption {
 }
 
 img {
+    display: block;
     width: 100%;
     height: auto;
     border-radius: 8px;
@@ -53,19 +62,20 @@ img {
 }
 
 .list {
-    columns: 3;
-    column-gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 18px;
 }
 
 @media (max-width: 900px) {
     .list {
-        columns: 2;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 600px) {
     .list {
-        columns: 1;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -81,6 +91,7 @@ img {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
+    z-index: 100;
 }
 
 .modal-content {
@@ -89,18 +100,21 @@ img {
     background: #f6f8fa;
     border-radius: 12px;
     padding: 16px;
-    overflow: hidden;
+    overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    z-index: 101;
 }
 
 #modal-img {
     display: block;
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 85vh;
     width: auto;
     height: auto;
     object-fit: contain;
-    margin: 12px auto 0 auto;
+    margin: 12px auto 0;
+    border: none;
+    border-radius: 0;
 }
 
 .modal-caption {
@@ -119,4 +133,12 @@ img {
     line-height: 1;
     cursor: pointer;
     color: #24292f;
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+    color: #0969da;
+    outline: 2px solid #0969da;
+    outline-offset: 2px;
+    border-radius: 4px;
 }

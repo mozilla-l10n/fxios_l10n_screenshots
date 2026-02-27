@@ -123,7 +123,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
                 f"""<figure>
             <figcaption>{caption}</figcaption>
             <a href="{raw_url}" data-modal="image" data-caption="{caption}">
-                <img src="{raw_url}" alt="{caption}"/>
+                <img src="{raw_url}" alt="{caption}" loading="lazy"/>
             </a>
             </figure>"""
             )
