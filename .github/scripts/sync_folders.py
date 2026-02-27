@@ -23,35 +23,25 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from collections.abc import Iterable
 
-
-TOP_IGNORE_PCT: float = 0.06
-LEFT_IGNORE_PCT: float = 0.26
+from utils import is_hidden, iter_png_files
 
 
-def is_hidden_path(p: Path) -> bool:
-    return p.name.startswith(".")
+_DEFAULT_TOP_IGNORE_PCT: float = 0.06
+_DEFAULT_LEFT_IGNORE_PCT: float = 0.26
 
 
 def iter_locale_dirs(root: Path) -> list[Path]:
     if not root.exists():
         return []
     return sorted(
-        [p for p in root.iterdir() if p.is_dir() and not is_hidden_path(p)],
+        [p for p in root.iterdir() if p.is_dir() and not is_hidden(p)],
         key=lambda x: x.name,
     )
 
 
-def iter_png_files(folder: Path) -> list[Path]:
-    if not folder.exists():
-        return []
-    files: list[Path] = []
-    for p in folder.iterdir():
-        if p.is_file() and not is_hidden_path(p) and p.suffix.lower() == ".png":
-            files.append(p)
-    return sorted(files, key=lambda x: x.name)
-
-
-def same_except_time(old_png: Path, new_png: Path) -> bool:
+def same_except_time(
+    old_png: Path, new_png: Path, top_pct: float, left_pct: float
+) -> bool:
     """
     Perceptual-hash comparison outside an ignored top-left region defined as percentages.
 
@@ -61,24 +51,22 @@ def same_except_time(old_png: Path, new_png: Path) -> bool:
     from PIL import Image  # type: ignore[import-not-found]
     import imagehash  # type: ignore[import-not-found]
 
-    def masked_phash(p: Path) -> imagehash.ImageHash:
-        im = Image.open(p).convert("RGB")
+    def masked_phash(im: Image.Image) -> imagehash.ImageHash:
         w, h = im.size
-
-        top = int(h * TOP_IGNORE_PCT)
-        left = int(w * LEFT_IGNORE_PCT)
-
+        top = int(h * top_pct)
+        left = int(w * left_pct)
         masked = im.copy()
         # Mask out top-left region (time)
         masked.paste((0, 0, 0), (int(w * 0.1), int(h * 0.02), left, top))
         return imagehash.phash(masked)
 
-    # If dimensions differ, treat as different
     with Image.open(old_png) as a_im, Image.open(new_png) as b_im:
         if a_im.size != b_im.size:
             return False
+        a_rgb = a_im.convert("RGB")
+        b_rgb = b_im.convert("RGB")
 
-    return (masked_phash(old_png) - masked_phash(new_png)) == 0
+    return (masked_phash(a_rgb) - masked_phash(b_rgb)) == 0
 
 
 @dataclass
@@ -112,7 +100,9 @@ def remove_file(p: Path) -> None:
         return
 
 
-def sync_locale(old_loc: Path, new_loc: Path | None) -> LocaleStats:
+def sync_locale(
+    old_loc: Path, new_loc: Path | None, top_pct: float, left_pct: float
+) -> LocaleStats:
     stats = LocaleStats(locale=old_loc.name)
 
     if new_loc is None or not new_loc.exists():
@@ -127,7 +117,7 @@ def sync_locale(old_loc: Path, new_loc: Path | None) -> LocaleStats:
         old_path = old_files[name]
         new_path = new_files[name]
 
-        if same_except_time(old_path, new_path):
+        if same_except_time(old_path, new_path, top_pct, left_pct):
             stats.ignored += 1
         else:
             copy_file(new_path, old_path)
@@ -151,7 +141,7 @@ def sync_locale(old_loc: Path, new_loc: Path | None) -> LocaleStats:
 
 
 def sync_all(
-    old_root: Path, new_root: Path
+    old_root: Path, new_root: Path, top_pct: float, left_pct: float
 ) -> tuple[list[LocaleStats], Totals, list[str]]:
     old_locales = {p.name: p for p in iter_locale_dirs(old_root)}
     new_locales = {p.name: p for p in iter_locale_dirs(new_root)}
@@ -166,7 +156,7 @@ def sync_all(
         old_loc = old_locales[locale]
         new_loc = new_locales.get(locale)
 
-        st = sync_locale(old_loc, new_loc)
+        st = sync_locale(old_loc, new_loc, top_pct, left_pct)
         stats_list.append(st)
 
         totals.changed += st.changed
@@ -190,11 +180,6 @@ def sync_all(
 
         stats_list.append(st)
         totals.added += st.added
-
-    # Keep a combined removed list (to print at the end)
-    removed_list: list[str] = []
-    for st in stats_list:
-        removed_list.extend(st.removed_files)
 
     return stats_list, totals, warnings
 
@@ -240,24 +225,20 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--top-ignore",
         type=float,
-        default=TOP_IGNORE_PCT,
+        default=_DEFAULT_TOP_IGNORE_PCT,
         help="Top fraction of image height to ignore (default: 0.10).",
     )
     p.add_argument(
         "--left-ignore",
         type=float,
-        default=LEFT_IGNORE_PCT,
+        default=_DEFAULT_LEFT_IGNORE_PCT,
         help="Left fraction of image width to ignore (default: 0.30).",
     )
     return p.parse_args()
 
 
 def main() -> None:
-    global TOP_IGNORE_PCT, LEFT_IGNORE_PCT
-
     args = parse_args()
-    TOP_IGNORE_PCT = args.top_ignore
-    LEFT_IGNORE_PCT = args.left_ignore
 
     old_root: Path = args.old
     new_root: Path = args.new
@@ -267,7 +248,9 @@ def main() -> None:
     if not new_root.exists() or not new_root.is_dir():
         raise SystemExit(f"NEW root does not exist or is not a directory: {new_root}")
 
-    stats_list, totals, warnings = sync_all(old_root, new_root)
+    stats_list, totals, warnings = sync_all(
+        old_root, new_root, args.top_ignore, args.left_ignore
+    )
     removed_list: list[str] = []
     for st in stats_list:
         removed_list.extend(st.removed_files)
