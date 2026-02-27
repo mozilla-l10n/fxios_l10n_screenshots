@@ -11,8 +11,11 @@ from string import Template
 from subprocess import check_output
 from urllib.request import urlopen
 
+from utils import is_hidden, iter_png_files
+
 
 PONTOON_PROJECT_API = "https://pontoon.mozilla.org/api/v2/projects/firefox-for-ios/"
+PONTOON_API_TIMEOUT_S: float = 30.0
 
 
 def load_template(path: Path) -> Template:
@@ -24,15 +27,11 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def is_hidden(p: Path) -> bool:
-    return p.name.startswith(".")
-
-
 def fetch_locale_names() -> dict[str, str]:
     """
     Return mapping: locale_code -> locale_name
     """
-    with urlopen(PONTOON_PROJECT_API) as r:  # nosec: trusted endpoint
+    with urlopen(PONTOON_PROJECT_API, timeout=PONTOON_API_TIMEOUT_S) as r:  # nosec: trusted endpoint
         data = json.loads(r.read().decode("utf-8"))
 
     mapping: dict[str, str] = {}
@@ -55,21 +54,10 @@ def iter_locale_dirs(repo_root: Path) -> list[Path]:
             continue
         if is_hidden(p):
             continue
-        if p.name in {".github", "site"}:
+        if p.name == "site":
             continue
         out.append(p)
     return sorted(out, key=lambda x: x.name)
-
-
-def iter_png_files(locale_dir: Path) -> list[Path]:
-    return sorted(
-        [
-            p
-            for p in locale_dir.iterdir()
-            if p.is_file() and not is_hidden(p) and p.suffix.lower() == ".png"
-        ],
-        key=lambda x: x.name,
-    )
 
 
 def commit_date_for_hash(repo_root: Path, commit: str) -> str:
@@ -135,7 +123,7 @@ def build_site(repo_root: Path, out_dir: Path) -> None:
                 f"""<figure>
             <figcaption>{caption}</figcaption>
             <a href="{raw_url}" data-modal="image" data-caption="{caption}">
-                <img src="{raw_url}" alt="{caption}"/>
+                <img src="{raw_url}" alt="{caption}" loading="lazy"/>
             </a>
             </figure>"""
             )
