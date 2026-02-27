@@ -58,4 +58,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_L10N_TEST_ENG }}
           webhook-type: incoming-webhook
           payload: |
-            {"text": ":screenshots: :new: A new set of Firefox iOS l10n screenshots has been made available at ${{ steps.deployment.outputs.page_url }}"}
+            {"text": ":screenshots: :new: L10n screenshots website has been updated at ${{ steps.deployment.outputs.page_url }}"}
