@@ -11,6 +11,8 @@ $body
 
 <div id="img-modal" class="modal" aria-hidden="true">
   <div class="modal-backdrop" data-close="1"></div>
+  <button class="modal-nav modal-prev" type="button" aria-label="Previous">&#8249;</button>
+  <button class="modal-nav modal-next" type="button" aria-label="Next">&#8250;</button>
   <div class="modal-content" role="dialog" aria-modal="true" aria-label="Screenshot preview">
     <button class="modal-close" type="button" data-close="1" aria-label="Close">×</button>
     <div class="modal-caption" id="modal-caption"></div>
@@ -24,13 +26,42 @@ $body
     const modalImg = document.getElementById("modal-img");
     const modalCaption = document.getElementById("modal-caption");
     const modalClose = modal.querySelector(".modal-close");
+    const modalPrev = modal.querySelector(".modal-prev");
+    const modalNext = modal.querySelector(".modal-next");
+    const triggers = Array.from(document.querySelectorAll("a[data-modal='image']"));
+    let currentIndex = -1;
     let lastFocused = null;
 
-    function openModal(src, caption) {
+    const focusable = triggers.length > 1
+      ? [modalPrev, modalClose, modalNext]
+      : [modalClose];
+
+    if (triggers.length <= 1) {
+      modalPrev.hidden = true;
+      modalNext.hidden = true;
+    }
+
+    function updateNav() {
+      if (triggers.length > 1) {
+        modalPrev.hidden = currentIndex === 0;
+        modalNext.hidden = currentIndex === triggers.length - 1;
+      }
+    }
+
+    function showImage(index) {
+      if (index < 0 || index >= triggers.length) return;
+      currentIndex = index;
+      const a = triggers[currentIndex];
+      modalImg.src = a.getAttribute("href");
+      const caption = a.getAttribute("data-caption") || "";
+      modalImg.alt = caption;
+      modalCaption.textContent = caption;
+      updateNav();
+    }
+
+    function openModal(index) {
       lastFocused = document.activeElement;
-      modalImg.src = src;
-      modalImg.alt = caption || "";
-      modalCaption.textContent = caption || "";
+      showImage(index);
       modal.classList.add("open");
       modal.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
@@ -50,20 +81,26 @@ $body
       const a = e.target.closest("a[data-modal='image']");
       if (a) {
         e.preventDefault();
-        openModal(a.getAttribute("href"), a.getAttribute("data-caption") || "");
+        openModal(triggers.indexOf(a));
         return;
       }
-      if (e.target.closest("[data-close='1']")) {
-        closeModal();
-      }
+      if (e.target.closest(".modal-prev")) { showImage(currentIndex - 1); return; }
+      if (e.target.closest(".modal-next")) { showImage(currentIndex + 1); return; }
+      if (e.target.closest("[data-close='1']")) { closeModal(); }
     });
 
     document.addEventListener("keydown", (e) => {
       if (!modal.classList.contains("open")) return;
       if (e.key === "Escape") { closeModal(); return; }
+      if (e.key === "ArrowLeft") { showImage(currentIndex - 1); return; }
+      if (e.key === "ArrowRight") { showImage(currentIndex + 1); return; }
       if (e.key === "Tab") {
         e.preventDefault();
-        modalClose.focus();
+        const idx = focusable.indexOf(document.activeElement);
+        const next = e.shiftKey
+          ? (idx - 1 + focusable.length) % focusable.length
+          : (idx + 1) % focusable.length;
+        focusable[next].focus();
       }
     });
   })();
