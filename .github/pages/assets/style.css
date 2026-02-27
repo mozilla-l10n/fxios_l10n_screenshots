@@ -1,10 +1,50 @@
+:root {
+    --color-bg: #ffffff;
+    --color-text: #24292f;
+    --color-text-muted: #57606a;
+    --color-link: #0969da;
+    --color-border: #d0d7de;
+    --color-figure-bg: #ffffff;
+    --color-modal-bg: #f6f8fa;
+    --color-nav-bg: rgba(255, 255, 255, 0.9);
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --color-bg: #0d1117;
+        --color-text: #e6edf3;
+        --color-text-muted: #8b949e;
+        --color-link: #58a6ff;
+        --color-border: #30363d;
+        --color-figure-bg: #161b22;
+        --color-modal-bg: #161b22;
+        --color-nav-bg: rgba(22, 27, 34, 0.9);
+        color-scheme: dark;
+    }
+}
+
+:root[data-theme="dark"] {
+    --color-bg: #0d1117;
+    --color-text: #e6edf3;
+    --color-text-muted: #8b949e;
+    --color-link: #58a6ff;
+    --color-border: #30363d;
+    --color-figure-bg: #161b22;
+    --color-modal-bg: #161b22;
+    --color-nav-bg: rgba(22, 27, 34, 0.9);
+    color-scheme: dark;
+}
+
 body {
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     margin: 24px;
+    background: var(--color-bg);
+    color: var(--color-text);
 }
 
 a {
-    color: #0969da;
+    color: var(--color-link);
     text-decoration: none;
 }
 
@@ -14,7 +54,7 @@ a:focus-visible {
 }
 
 a:focus-visible {
-    outline: 2px solid #0969da;
+    outline: 2px solid var(--color-link);
     outline-offset: 2px;
     border-radius: 2px;
 }
@@ -27,7 +67,7 @@ a:focus-visible {
 }
 
 .muted {
-    color: #57606a;
+    color: var(--color-text-muted);
 }
 
 .grid {
@@ -40,15 +80,15 @@ a:focus-visible {
 figure {
     cursor: pointer;
     margin: 0;
-    border: 1px solid #d0d7de;
+    border: 1px solid var(--color-border);
     border-radius: 10px;
     padding: 12px;
-    background: #fff;
+    background: var(--color-figure-bg);
 }
 
 figcaption {
     font-size: 13px;
-    color: #24292f;
+    color: var(--color-text);
     margin-bottom: 8px;
     word-break: break-word;
 }
@@ -58,7 +98,7 @@ img {
     width: 100%;
     height: auto;
     border-radius: 8px;
-    border: 1px solid #d0d7de;
+    border: 1px solid var(--color-border);
 }
 
 .list {
@@ -79,6 +119,28 @@ img {
     }
 }
 
+#theme-toggle {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    background: var(--color-figure-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--color-text);
+    z-index: 10;
+}
+
+#theme-toggle:hover,
+#theme-toggle:focus-visible {
+    border-color: var(--color-link);
+    color: var(--color-link);
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+}
+
 .modal {
     display: none;
 }
@@ -97,7 +159,7 @@ img {
 .modal-content {
     position: fixed;
     inset: 5vh 5vw;
-    background: #f6f8fa;
+    background: var(--color-modal-bg);
     border-radius: 12px;
     padding: 16px;
     overflow-y: auto;
@@ -119,7 +181,7 @@ img {
 
 .modal-caption {
     font-size: 14px;
-    color: #24292f;
+    color: var(--color-text);
     word-break: break-word;
 }
 
@@ -132,13 +194,13 @@ img {
     font-size: 28px;
     line-height: 1;
     cursor: pointer;
-    color: #24292f;
+    color: var(--color-text);
 }
 
 .modal-close:hover,
 .modal-close:focus-visible {
-    color: #0969da;
-    outline: 2px solid #0969da;
+    color: var(--color-link);
+    outline: 2px solid var(--color-link);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -148,13 +210,13 @@ img {
     top: 50%;
     transform: translateY(-50%);
     z-index: 102;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #d0d7de;
+    background: var(--color-nav-bg);
+    border: 1px solid var(--color-border);
     border-radius: 50%;
     width: 40px;
     height: 40px;
     cursor: pointer;
-    color: #24292f;
+    color: var(--color-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,8 +242,8 @@ img {
 
 .modal-nav:hover,
 .modal-nav:focus-visible {
-    color: #0969da;
-    border-color: #0969da;
-    outline: 2px solid #0969da;
+    color: var(--color-link);
+    border-color: var(--color-link);
+    outline: 2px solid var(--color-link);
     outline-offset: 2px;
 }

@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>$title</title>
   <link rel="stylesheet" href="$base_path/assets/style.css">
+  <script>(function(){var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;}());</script>
 </head>
 <body>
+<button id="theme-toggle" type="button"></button>
 $body
 
 <div id="img-modal" class="modal" aria-hidden="true">
@@ -102,6 +104,36 @@ $body
           : (idx + 1) % focusable.length;
         focusable[next].focus();
       }
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    const btn = document.getElementById("theme-toggle");
+    const root = document.documentElement;
+
+    function isDark() {
+      if (root.dataset.theme === "dark") return true;
+      if (root.dataset.theme === "light") return false;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function updateButton() {
+      btn.textContent = isDark() ? "Light" : "Dark";
+    }
+
+    btn.addEventListener("click", () => {
+      const next = isDark() ? "light" : "dark";
+      root.dataset.theme = next;
+      localStorage.setItem("theme", next);
+      updateButton();
+    });
+
+    updateButton();
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (!root.dataset.theme) updateButton();
     });
   })();
 </script>
