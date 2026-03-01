@@ -53,9 +53,23 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
       - name: Notify Slack
+        if: github.event_name == 'workflow_run'
         uses: slackapi/slack-github-action@v2
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_L10N_TEST_ENG }}
           webhook-type: incoming-webhook
           payload: |
-            {"text": ":screenshots: :new: L10n screenshots website has been updated at ${{ steps.deployment.outputs.page_url }}"}
+            {"text": ":screenshots: :new: A new set of screenshots for Firefox iOS is available at ${{ steps.deployment.outputs.page_url }}"}
+      - name: Notify Matrix
+        if: github.event_name == 'workflow_run'
+        env:
+          MATRIX_ACCESS_TOKEN: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          ROOM_ID_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('!QUTQxksYMuoHwmJEHg:mozilla.org'))")
+          TXN_ID=$(date +%s%N)
+          curl -sf -X PUT \
+            "https://matrix-client.matrix.org/_matrix/client/v3/rooms/${ROOM_ID_ENCODED}/send/m.room.message/${TXN_ID}" \
+            -H "Authorization: Bearer ${MATRIX_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary "{\"msgtype\": \"m.notice\", \"body\": \"A new set of screenshots for Firefox iOS is available at ${PAGE_URL}\"}"
