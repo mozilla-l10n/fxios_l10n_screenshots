@@ -56,12 +56,12 @@ jobs:
           echo "Waiting for run $RUN_ID to complete..."
           gh run watch "$RUN_ID" --exit-status --interval 30
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.FXIOS_SCREENSHOTS_L10N }}
 
       - name: Store Taskcluster task ID
         if: steps.compare.outputs.trigger == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FXIOS_SCREENSHOTS_L10N }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -83,7 +83,7 @@ jobs:
       - name: Push commits
         working-directory: repo
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FXIOS_SCREENSHOTS_L10N }}
         run: |
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git pull --rebase
