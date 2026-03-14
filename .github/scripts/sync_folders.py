@@ -43,30 +43,35 @@ def same_except_time(
     old_png: Path, new_png: Path, top_pct: float, left_pct: float
 ) -> bool:
     """
-    Perceptual-hash comparison outside an ignored top-left region defined as percentages.
+    Pixel-exact comparison outside an ignored top-left region defined as percentages.
 
-    Returns True if the images are perceptually identical (hash distance == 0)
-    after masking the top-left region; else False.
+    Returns True if the images are pixel-identical after masking the top-left
+    region (which contains the status-bar clock); else False.
+
+    Pixel comparison is used instead of perceptual hashing because phash
+    downscales the image too aggressively and misses subtle text differences
+    (e.g. dotted İ vs. dotless I in Turkish).
     """
     from PIL import Image  # type: ignore[import-not-found]
-    import imagehash  # type: ignore[import-not-found]
-
-    def masked_phash(im: Image.Image) -> imagehash.ImageHash:
-        w, h = im.size
-        top = int(h * top_pct)
-        left = int(w * left_pct)
-        masked = im.copy()
-        # Mask out top-left region (time)
-        masked.paste((0, 0, 0), (int(w * 0.1), int(h * 0.02), left, top))
-        return imagehash.phash(masked)
+    import numpy as np  # type: ignore[import-not-found]
 
     with Image.open(old_png) as a_im, Image.open(new_png) as b_im:
         if a_im.size != b_im.size:
             return False
-        a_rgb = a_im.convert("RGB")
-        b_rgb = b_im.convert("RGB")
+        a_arr = np.array(a_im.convert("RGB"))
+        b_arr = np.array(b_im.convert("RGB"))
 
-    return (masked_phash(a_rgb) - masked_phash(b_rgb)) == 0
+    h, w = a_arr.shape[:2]
+    top = int(h * top_pct)
+    left = int(w * left_pct)
+    x0 = int(w * 0.1)
+    y0 = int(h * 0.02)
+
+    # Zero out the top-left time region in both arrays before comparing
+    a_arr[y0:top, x0:left] = 0
+    b_arr[y0:top, x0:left] = 0
+
+    return np.array_equal(a_arr, b_arr)
 
 
 @dataclass
